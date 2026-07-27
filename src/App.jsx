@@ -48,6 +48,6 @@ function Vault() {
                                                                                                                                                                     </Routes>
                                                                                                                                                                         </BrowserRouter>
                                                                                                                                                                           );
-                                                                                                                                                                          }
+                                                                                                                                                                          
 
                                                                                                                                                                           export default App;
