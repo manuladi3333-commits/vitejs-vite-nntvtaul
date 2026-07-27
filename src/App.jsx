@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import DevTest from "./devTest.jsx";          // TEMPORARY — delete with Phase 1
 
 function Vault() {
   return <h2>Vault Page</h2>;
@@ -26,7 +27,7 @@ function Vault() {
                                     <div>
                                           <h1>Lumina Romance</h1>
                                                 <nav>
-                                                        <ul style={{ display: "flex", gap: "0.5rem", listStyle: "none", padding: 0 }}>
+                                                        <ul style={{ display: "flex", gap: "0.75rem", listStyle: "none", padding: 0 }}>
                                                                   <li><Link to="/vault">Vault</Link></li>
                                                                             <li><Link to="/canvas">Canvas</Link></li>
                                                                                       <li><Link to="/flipbook">Flipbook</Link></li>
@@ -44,10 +45,11 @@ function Vault() {
                                                                                                                                       <Route path="/vault" element={<Vault />} />
                                                                                                                                               <Route path="/canvas" element={<Canvas />} />
                                                                                                                                                       <Route path="/flipbook" element={<Flipbook />} />
-                                                                                                                                                              <Route path="*" element={<NotFound />} />
-                                                                                                                                                                    </Routes>
-                                                                                                                                                                        </BrowserRouter>
-                                                                                                                                                                          );
-                                                                                                                                                                        }
+                                                                                                                                                              <Route path="/devtest" element={<DevTest />} />   {/* TEMPORARY — delete with Phase 1 */}
+                                                                                                                                                                      <Route path="*" element={<NotFound />} />
+                                                                                                                                                                            </Routes>
+                                                                                                                                                                                </BrowserRouter>
+                                                                                                                                                                                  );
+                                                                                                                                                                                  }
 
-                                                                                                                                                                          export default App;
+                                                                                                                                                                                  export default App;
