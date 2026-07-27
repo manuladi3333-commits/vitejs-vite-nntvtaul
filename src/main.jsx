@@ -4,26 +4,34 @@ import './index.css'
 import App from './App.jsx'
 import { initDB } from './db.js'
 
-async function bootstrap() {
-  const result = await initDB();
+function showFatal(message) {
+  document.getElementById('root').innerHTML =
+      '<div style="padding:16px;font-family:monospace;white-space:pre-wrap">' +
+          message + '</div>';
+          }
 
-    if (!result.ok) {
-        document.getElementById('root').innerHTML =
-              '<h2>Storage unavailable</h2>' +
-                    '<p>This app needs local storage to work. ' +
-                          'Private browsing mode or a full device can block it.</p>';
-                              return;
-                                }
+          async function bootstrap() {
+            const result = await initDB();
 
-                                  if (!result.persisted) {
-                                      console.warn('[luminaRomanceDB] Storage not persisted — data may be evicted.');
-                                        }
+              if (!result.ok) {
+                  showFatal('<h2>Storage unavailable</h2>' +
+                        '<p>This app needs local storage to work. ' +
+                              'Private browsing mode or a full device can block it.</p>');
+                                  return;
+                                    }
 
-                                          createRoot(document.getElementById('root')).render(
-                                              <StrictMode>
-                                                    <App />
-                                                        </StrictMode>,
-                                                          );
-                                                          }
+                                      if (!result.persisted) {
+                                          console.warn('[luminaRomanceDB] Storage not persisted — data may be evicted.');
+                                            }
 
-                                                          bootstrap();
+                                              createRoot(document.getElementById('root')).render(
+                                                  <StrictMode>
+                                                        <App />
+                                                            </StrictMode>,
+                                                              );
+                                                              }
+
+                                                              // Any unexpected throw becomes a visible message, never a blank screen.
+                                                              bootstrap().catch((err) => {
+                                                                showFatal('<h2>Startup failed</h2>' + err.name + ': ' + err.message);
+                                                                });
