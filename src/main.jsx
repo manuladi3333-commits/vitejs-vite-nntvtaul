@@ -35,3 +35,4 @@ function showFatal(message) {
                                                               bootstrap().catch((err) => {
                                                                 showFatal('<h2>Startup failed</h2>' + err.name + ': ' + err.message);
                                                                 });
+                                                              
