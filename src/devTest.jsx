@@ -1,64 +1,50 @@
-import { useState } from 'react';
-import { db } from './db.js';
+// src/devTest.jsx  — TEMPORARY, delete after Phase 1
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { db } from "./db";
 
-// Blob-safe: describes binary fields instead of serializing them.
-function describe(record) {
-  const out = {};
-    for (const [key, value] of Object.entries(record)) {
-        if (value instanceof Blob) out[key] = `[Blob ${value.size} bytes, ${value.type}]`;
-            else if (value instanceof Date) out[key] = value.toISOString();
-                else out[key] = value;
-                  }
-                    return out;
-                    }
+export default function DevTest() {
+  const [output, setOutput] = useState("Nothing run yet.");
 
-                    export default function DevTest() {
-                      const [output, setOutput] = useState('Ready.');
+    async function writeRow() {
+        try {
+              await db.characters.add({
+                      name: "Test Character",
+                              seed: Math.floor(Math.random() * 1000000),
+                                      createdAt: Date.now(),
+                                            });
+                                                  const total = await db.characters.count();
+                                                        const recent = await db.characters.orderBy("createdAt").reverse().limit(5).toArray();
+                                                              const lines = recent.map(
+                                                                      (c) => `id ${c.id} | ${c.name} | seed ${c.seed} | ${new Date(c.createdAt).toLocaleString()}`
+                                                                            );
+                                                                                  setOutput(`Total characters: ${total}\n\n5 most recent:\n${lines.join("\n")}`);
+                                                                                      } catch (err) {
+                                                                                            setOutput(`Write failed: ${String(err)}`);
+                                                                                                }
+                                                                                                  }
 
-                        async function runWriteTest() {
-                            try {
-                                  const newId = await db.characters.add({
-                                          name: "Test Character",
-                                                  imageBlob: null,
-                                                          prompt: "a test prompt",
-                                                                  seed: 12345,
-                                                                          cfgScale: 7,
-                                                                                  createdAt: new Date(),
-                                                                                        });
-                                                                                              const total = await db.characters.count();
-                                                                                                    const recent = await db.characters
-                                                                                                            .orderBy('createdAt').reverse().limit(5).toArray();
+                                                                                                    async function clearRows() {
+                                                                                                        try {
+                                                                                                              const deleted = await db.characters.where("name").equals("Test Character").delete();
+                                                                                                                    const total = await db.characters.count();
+                                                                                                                          setOutput(`Deleted ${deleted} test rows.\nTotal characters now: ${total}`);
+                                                                                                                              } catch (err) {
+                                                                                                                                    setOutput(`Clear failed: ${String(err)}`);
+                                                                                                                                        }
+                                                                                                                                          }
 
-                                                                                                                  setOutput(
-                                                                                                                          `Saved with id: ${newId}\nTotal records: ${total}\n\n` +
-                                                                                                                                  `Most recent 5:\n${JSON.stringify(recent.map(describe), null, 2)}`
-                                                                                                                                        );
-                                                                                                                                            } catch (err) {
-                                                                                                                                                  setOutput(`WRITE FAILED\n\n${err.name}: ${err.message}`);
-                                                                                                                                                      }
-                                                                                                                                                        }
-
-                                                                                                                                                          async function clearTestData() {
-                                                                                                                                                              try {
-                                                                                                                                                                    const deleted = await db.characters.where('name').equals('Test Character').delete();
-                                                                                                                                                                          const total = await db.characters.count();
-                                                                                                                                                                                setOutput(`Removed ${deleted} test record(s).\nRemaining: ${total}`);
-                                                                                                                                                                                    } catch (err) {
-                                                                                                                                                                                          setOutput(`CLEAR FAILED\n\n${err.name}: ${err.message}`);
-                                                                                                                                                                                              }
-                                                                                                                                                                                                }
-
-                                                                                                                                                                                                  return (
-                                                                                                                                                                                                      <div style={{ padding: 16 }}>
-                                                                                                                                                                                                            <h2>DB Test</h2>
-                                                                                                                                                                                                                  <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                                                                                                                                                                                                                          <button onClick={runWriteTest} style={{ padding: '12px 16px' }}>Write test row</button>
-                                                                                                                                                                                                                                  <button onClick={clearTestData} style={{ padding: '12px 16px' }}>Clear test rows</button>
-                                                                                                                                                                                                                                        </div>
-                                                                                                                                                                                                                                              <pre style={{
-                                                                                                                                                                                                                                                      padding: 16, background: '#eee', fontFamily: 'monospace',
-                                                                                                                                                                                                                                                              whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                                                                                                                                                                                                                                                                    }}>{output}</pre>
-                                                                                                                                                                                                                                                                        </div>
-                                                                                                                                                                                                                                                                          );
-                                                                                                                                                                                                                                                                        }                                                    
+                                                                                                                                            return (
+                                                                                                                                                <div style={{ padding: 24, fontFamily: "system-ui" }}>
+                                                                                                                                                      <h1>DevTest (temporary)</h1>
+                                                                                                                                                            <button onClick={writeRow} style={{ padding: "12px 16px", marginRight: 8 }}>
+                                                                                                                                                                    Write test row
+                                                                                                                                                                          </button>
+                                                                                                                                                                                <button onClick={clearRows} style={{ padding: "12px 16px" }}>
+                                                                                                                                                                                        Clear test rows
+                                                                                                                                                                                              </button>
+                                                                                                                                                                                                    <pre style={{ marginTop: 20, whiteSpace: "pre-wrap", fontSize: 14 }}>{output}</pre>
+                                                                                                                                                                                                          <Link to="/">Back to Home</Link>
+                                                                                                                                                                                                              </div>
+                                                                                                                                                                                                                );
+                                                                                                                                                                                                                }
