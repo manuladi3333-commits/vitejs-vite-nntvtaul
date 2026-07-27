@@ -42,3 +42,4 @@ export async function initDB() {
     console.error("[luminaRomanceDB] failed to open:", err);
     return { ok: false, persisted: false, error: err };
   }
+}
