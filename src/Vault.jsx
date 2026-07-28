@@ -1,13 +1,100 @@
 // src/Vault.jsx
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { db } from "./db";
 
 const page = { padding: 24, fontFamily: "system-ui" };
+const section = { marginTop: 24 };
+const btn = { padding: "12px 16px" };
+
+const DEFAULT_FPS = 12;
 
 export default function Vault() {
-  return (
-      <div style={page}>
-            <h1>Vault</h1>
-                  <Link to="/">Back to Home</Link>
-                      </div>
-                        );
-                        }
+  const [projects, setProjects] = useState([]);
+    const [characters, setCharacters] = useState([]);
+      const [status, setStatus] = useState("Loading…");
+        const navigate = useNavigate();
+
+          async function loadData() {
+              try {
+                    const [allProjects, allCharacters] = await Promise.all([
+                            db.projects.orderBy("createdAt").reverse().toArray(),
+                                    // Strip blobs before they reach React state — a text list must
+                                            // never hold megabytes of image data in memory.
+                                                    db.characters.orderBy("createdAt").reverse().toArray()
+                                                              .then((rows) => rows.map(({ imageBlob, thumbBlob, ...meta }) => meta)),
+                                                                    ]);
+                                                                          setProjects(allProjects);
+                                                                                setCharacters(allCharacters);
+                                                                                      setStatus("");
+                                                                                          } catch (err) {
+                                                                                                setStatus(`Failed to load: ${err.name} — ${err.message}`);
+                                                                                                    }
+                                                                                                      }
+
+                                                                                                        useEffect(() => { loadData(); }, []);
+
+                                                                                                          async function createNewProject() {
+                                                                                                              try {
+                                                                                                                    const newId = await db.projects.add({
+                                                                                                                            title: "Untitled Project",
+                                                                                                                                    frameIds: [],
+                                                                                                                                            fps: DEFAULT_FPS,          // required by the locked schema and by Flipbook
+                                                                                                                                                    createdAt: new Date(),
+                                                                                                                                                          });
+                                                                                                                                                                // Pass the project id so Canvas knows what it is editing.
+                                                                                                                                                                      navigate(`/canvas?project=${newId}`);
+                                                                                                                                                                          } catch (err) {
+                                                                                                                                                                                setStatus(`Failed to create project: ${err.name} — ${err.message}`);
+                                                                                                                                                                                    }
+                                                                                                                                                                                      }
+
+                                                                                                                                                                                        async function deleteProject(id, title) {
+                                                                                                                                                                                            if (!window.confirm(`Delete "${title}"?`)) return;
+                                                                                                                                                                                                try {
+                                                                                                                                                                                                      await db.projects.delete(id);
+                                                                                                                                                                                                            await loadData();
+                                                                                                                                                                                                                } catch (err) {
+                                                                                                                                                                                                                      setStatus(`Delete failed: ${err.name} — ${err.message}`);
+                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                            }
+
+                                                                                                                                                                                                                              return (
+                                                                                                                                                                                                                                  <div style={page}>
+                                                                                                                                                                                                                                        <h1>Lumina Romance — Vault</h1>
+                                                                                                                                                                                                                                              <button style={btn} onClick={createNewProject}>+ New Project</button>
+
+                                                                                                                                                                                                                                                    <div style={section}>
+                                                                                                                                                                                                                                                            <h2>Recent Projects ({projects.length})</h2>
+                                                                                                                                                                                                                                                                    {projects.length === 0 && <p>No projects yet.</p>}
+                                                                                                                                                                                                                                                                            <ul>
+                                                                                                                                                                                                                                                                                      {projects.map((p) => (
+                                                                                                                                                                                                                                                                                                  <li key={p.id} style={{ marginBottom: 8 }}>
+                                                                                                                                                                                                                                                                                                                <Link to={`/canvas?project=${p.id}`}>{p.title}</Link>
+                                                                                                                                                                                                                                                                                                                              {" — "}{new Date(p.createdAt).toLocaleString()}
+                                                                                                                                                                                                                                                                                                                                            {" "}
+                                                                                                                                                                                                                                                                                                                                                          <button onClick={() => deleteProject(p.id, p.title)}
+                                                                                                                                                                                                                                                                                                                                                                          style={{ padding: "4px 8px", fontSize: 12 }}>Delete</button>
+                                                                                                                                                                                                                                                                                                                                                                                      </li>
+                                                                                                                                                                                                                                                                                                                                                                                                ))}
+                                                                                                                                                                                                                                                                                                                                                                                                        </ul>
+                                                                                                                                                                                                                                                                                                                                                                                                              </div>
+
+                                                                                                                                                                                                                                                                                                                                                                                                                    <div style={section}>
+                                                                                                                                                                                                                                                                                                                                                                                                                            <h2>Characters ({characters.length})</h2>
+                                                                                                                                                                                                                                                                                                                                                                                                                                    {characters.length === 0 && <p>No characters yet.</p>}
+                                                                                                                                                                                                                                                                                                                                                                                                                                            <ul>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                      {characters.map((c) => (
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                  <li key={c.id}>{c.name}{c.seed != null && ` — seed ${c.seed}`}</li>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ))}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </ul>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </div>
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                {status && <pre style={{ whiteSpace: "pre-wrap", fontSize: 13 }}>{status}</pre>}
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      <div style={section}>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              <Link to="/">Back to Home</Link>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          );
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          }
